@@ -4,7 +4,11 @@ compatibility_date = "2025-12-22"
 [[routes]]
 pattern = "*.pages.dev/track.php/*"
 zone_id = "26b3b263bf4509c9666203cf37acd28e"
-# Không cần biến nào cả
+
+[assets]
+directory = "./public"  # Thay bằng thư mục của bạn (nếu là ./dist thì dùng "./dist")
+not_found_handling = "single-page-application"  # Tùy chọn: Trả index.html nếu không match (cho SPA nếu cần)
+
 
 
 
