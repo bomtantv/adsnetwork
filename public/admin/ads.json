@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "title": "Game Hot 2025",
+    "image_url": "https://via.placeholder.com/300x250/FF0000/FFFFFF?text=Game+Hot",
+    "click_url": "https://play.google.com/store/apps/details?id=com.game.hot"
+  },
+  {
+    "id": 2,
+    "title": "App Kiếm Tiền",
+    "image_url": "https://via.placeholder.com/300x250/00FF00/FFFFFF?text=Kiếm+Tiền",
+    "click_url": "https://apps.apple.com/app/id123456789"
+  },
+  {
+    "id": 3,
+    "title": "Ưu Đãi Shopee",
+    "image_url": "https://via.placeholder.com/300x250/0000FF/FFFFFF?text=Shopee",
+    "click_url": "https://shopee.vn/m/uu-dai"
+  }
+]

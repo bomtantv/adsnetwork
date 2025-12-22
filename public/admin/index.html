@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <title>MyAdNetwork Admin + Tracking Realtime</title>
+  <style>
+    body{font-family:system-ui,sans-serif;background:#f7f7f7;padding:20px;max-width:1000px;margin:auto}
+    table{border-collapse:collapse;width:100%;margin:10px 0} th,td{border:1px solid #ddd;padding:12px;text-align:left}
+    th{background:#000;color:#fff} .ctr{color:green;font-weight:bold}
+    #login,#panel{padding:20px;border-radius:8px;background:#fff} button{padding:10px 20px;background:#000;color:#fff;border:none;border-radius:4px;cursor:pointer}
+    textarea{width:100%;height:300px;font-family:monospace;padding:10px;border:1px solid #ddd;border-radius:4px}
+  </style>
+</head>
+<body>
+  <h1>🔥 MyAdNetwork – Full SendBeacon Tracking Dashboard</h1>
+  
+  <div id="login">
+    <h2>Đăng nhập Admin</h2>
+    Mật khẩu: <input type="password" id="pass" style="padding:8px;width:200px"> 
+    <button onclick="login()">Đăng nhập</button>
+  </div>
+  
+  <div id="panel" style="display:none">
+    <h2>📝 Quản lý Quảng Cáo (ads.json)</h2>
+    <textarea id="ads-json"></textarea><br>
+    <button onclick="saveAds()">Lưu thay đổi</button>
+    
+    <h2>📊 Thống Kê Realtime (24h qua – Views, Clicks, CTR)</h2>
+    <div id="stats-table"></div>
+    
+    <h2>📈 Top Referrer (Nguồn traffic)</h2>
+    <div id="referrers"></div>
+  </div>
+
+  <script>
+    const PASS = "admin123"; // Đổi mật khẩu ở đây
+    const BASE_URL = '../'; // Nếu deploy Vercel, dùng domain thật
+    
+    if (localStorage.getItem('myad-auth') === PASS) showPanel();
+    
+    function login() {
+      const pass = document.getElementById('pass').value;
+      if (pass === PASS) {
+        localStorage.setItem('myad-auth', PASS);
+        showPanel();
+      } else {
+        alert('Sai mật khẩu!');
+      }
+    }
+    
+    async function showPanel() {
+      document.getElementById('login').style.display = 'none';
+      document.getElementById('panel').style.display = 'block';
+      await loadAll();
+      setInterval(loadAll, 30000); // Refresh stats mỗi 30s
+    }
+    
+    async function loadAll() {
+      // Load ads.json
+      const adsRes = await fetch(`${BASE_URL}admin/ads.json`);
+      const ads = await adsRes.json();
+      document.getElementById('ads-json').value = JSON.stringify(ads, null, 2);
+      
+      // Load stats.log và phân tích
+      const logRes = await fetch(`${BASE_URL}admin/stats.log`);
+      const log = await logRes.text();
+      const lines = log.split('\n').filter(l => l.trim());
+      
+      const stats = {};
+      const referrers = {};
+      lines.forEach(line => {
+        const parts = line.split(' | ');
+        if (parts.length < 3) return;
+        const event = parts[1];
+        const adMatch = parts[2].match(/AD:(\d+)/);
+        const adId = adMatch ? adMatch[1] : 0;
+        const ref = parts[4] || 'direct';
+        
+        if (!stats[adId]) stats[adId] = {views: 0, clicks: 0};
+        if (event === 'view') stats[adId].views++;
+        if (event === 'click') stats[adId].clicks++;
+        
+        if (ref !== 'direct') {
+          referrers[ref] = (referrers[ref] || 0) + 1;
+        }
+      });
+      
+      // Render bảng stats
+      let tableHtml = '<table><tr><th>ID</th><th>Title</th><th>Views</th><th>Clicks</th><th>CTR</th></tr>';
+      ads.forEach(ad => {
+        const s = stats[ad.id] || {views: 0, clicks: 0};
+        const ctr = s.views > 0 ? ((s.clicks / s.views) * 100).toFixed(2) : 0;
+        tableHtml += `<tr><td>${ad.id}</td><td>${ad.title}</td><td>${s.views}</td><td>${s.clicks}</td><td class="ctr">${ctr}%</td></tr>`;
+      });
+      tableHtml += '</table>';
+      document.getElementById('stats-table').innerHTML = tableHtml;
+      
+      // Render top referrers
+      const topRefs = Object.entries(referrers).sort((a, b) => b[1] - a[1]).slice(0, 5);
+      let refsHtml = '<ul>';
+      topRefs.forEach(([ref, count]) => {
+        refsHtml += `<li>${ref}: ${count} visits</li>`;
+      });
+      refsHtml += '</ul>';
+      document.getElementById('referrers').innerHTML = refsHtml;
+    }
+    
+    async function saveAds() {
+      const data = document.getElementById('ads-json').value;
+      try {
+        // Lưu qua fetch (cho Vercel/Netlify, dùng API route nếu cần)
+        await fetch(`${BASE_URL}admin/ads.json`, {
+          method: 'PUT',
+          body: data,
+          headers: {'Content-Type': 'application/json'}
+        });
+        alert('Đã lưu thành công! Refresh trang để xem thay đổi.');
+        loadAll();
+      } catch (e) {
+        alert('Lưu thất bại – dùng GitHub để update nếu Vercel không hỗ trợ PUT trực tiếp.');
+      }
+    }
+  </script>
+</body>
+</html>
