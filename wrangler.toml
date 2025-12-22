@@ -2,7 +2,8 @@ name = "adsnetwork"
 compatibility_date = "2025-12-22"
 
 [[routes]]
-pattern = "*.pages.dev/track.php"
+pattern = "*.pages.dev/track.php/*"
 
 # Không cần biến nào cả
+
 
